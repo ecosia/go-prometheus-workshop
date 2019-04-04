@@ -1,6 +1,7 @@
 FROM golang
-WORKDIR /go/src/github.com/ecosia/go-prometheus-workshop
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
-RUN go get -v .
 RUN go build .
-CMD ./go-prometheus-workshop
+CMD ./app
