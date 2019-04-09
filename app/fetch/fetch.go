@@ -2,7 +2,9 @@ package fetch
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 )
 
@@ -31,6 +33,13 @@ func NewRequest() (resp *http.Response, err error) {
 
 // Fetch returns response from Trees API and stores it in the response variable.
 func Fetch(makeRequest func() (*http.Response, error)) (int, error) {
+	// randomly returns a 500 status
+	statusCodes := map[int]int{503: 20}
+	number := rand.Intn(100)
+	if number < statusCodes[503] {
+		return 503, errors.New("Fake 503(service unavailable) repsonse")
+	}
+
 	resp, err := makeRequest()
 
 	if err != nil {
