@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"html/template"
 	"net/http"
 )
 
@@ -11,11 +11,17 @@ type response struct {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	data := response{count: 1}
-	resp, err := json.Marshal(data)
+	t, err := template.ParseFiles("./templates/withResponse.html")
 	if err != nil {
-		w.WriteHeader(500)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	w.Write(resp)
+
+	err = t.Execute(w, data.count)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }
 
 func main() {
