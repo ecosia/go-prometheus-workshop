@@ -12,6 +12,8 @@ We will use the [Prometheus Go client library](https://godoc.org/github.com/prom
 
 ### Section 1: Exporting metrics
 
+For this section, you can `cd` into `app/` and use `go run main.go` to run the dev server. (Docker will be used later)
+
 Exporting basics:
 
 Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example]() which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
@@ -49,4 +51,23 @@ Then, when tracking it, you'll need to provide the label values, which can be do
         status = http.StatusInternalServerError
 
 	requestCounter.WithLabelValues(status).Inc()
+
+
+### Scraping Metrics with Prometheus
+
+So far, we've been able to instrument our application, such that it is now exporting metrics about its runtime behaviour. However, we still need to collect those metrics and store the data in a way that we can query it back out, in order to graph it over time and make dashboards.
+
+There is a `prometheus.yaml` configuration file here in the repo, which is already set up to scrape metrics from our application. We can run both our application and Prometheus inside Docker, so that they are easily able to find each other.
+
+To build the application Docker image, and start the application container and Prometheus together, run the following command (from the root of this repo):
+
+    docker-compose up --build
+
+You should then be able to access the Prometheus dashboard on:
+
+    http://localhost:9090/graph
+
+Prometheus should find and immediately start scraping metrics from the application container. You can check that it's found the application container by looking at the list of "targets" that Prometheus is scraping:
+
+    http://localhost:9090/targets
 
