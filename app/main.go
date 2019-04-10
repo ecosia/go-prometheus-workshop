@@ -15,25 +15,16 @@ const (
 func handler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("./templates/withResponse.html")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	statusCode, err := fetch.Fetch(fetch.NewRequest)
+	treeData, statusCode, err := fetch.Fetch(fetch.NewRequest)
 
-	if err == nil && statusCode == http.StatusOK {
-		// Takes Tree Data from fetch package and marshal's it to the resp
-		// resp, err := json.Marshal(fetch.TreeData.Count)
-		// if err != nil {
-		// 	w.WriteHeader(500)
-		// }
-		// w.Write(resp)
-
-		err = t.Execute(w, fetch.TreeData.Count)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	err = t.Execute(w, treeData.Count)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else if statusCode != http.StatusOK {
 		w.WriteHeader(statusCode)
 	} else {
