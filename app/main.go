@@ -20,16 +20,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	treeData, statusCode, err := fetch.Fetch(fetch.NewRequest)
+	if statusCode != http.StatusOK {
+		w.WriteHeader(statusCode)
+		return
+	}
 
 	err = t.Execute(w, treeData.Count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else if statusCode != http.StatusOK {
-		w.WriteHeader(statusCode)
-	} else {
-		w.WriteHeader(500)
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
