@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"html/template"
 	"net/http"
 
@@ -13,7 +14,11 @@ const (
 	port = "8000"
 )
 
+var requestCounter = prometheus.NewCounter(prometheus.CounterOpts{Name: "requests_total"})
+
 func handler(w http.ResponseWriter, r *http.Request) {
+	requestCounter.Inc()
+
 	t, err := template.ParseFiles("./templates/withResponse.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,6 +44,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 
+	// metrics
+	prometheus.MustRegister(requestCounter)
 	mux.Handle("/metrics", promhttp.Handler())
 
 	fmt.Printf("Service started at %v", port)
