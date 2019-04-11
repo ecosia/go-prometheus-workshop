@@ -16,8 +16,6 @@ type Response struct {
 
 var (
 	treesAPIURL = "https://api.ecosia.org/v1/trees/count"
-	//TreeData is exported so it can be accessed from the fetch package
-	TreeData Response
 )
 
 // NewRequest creates a http client and makes the request, it returns a response and an error
@@ -32,32 +30,34 @@ func NewRequest() (resp *http.Response, err error) {
 }
 
 // Fetch returns response from Trees API and stores it in the response variable.
-func Fetch(makeRequest func() (*http.Response, error)) (int, error) {
+func Fetch(makeRequest func() (*http.Response, error)) (Response, int, error) {
+	var treeData Response
 	// randomly returns a 500 status
 	statusCodes := map[int]int{503: 20}
 	number := rand.Intn(100)
 	if number < statusCodes[503] {
-		return 503, errors.New("Fake 503(service unavailable) repsonse")
+		return treeData, 503, errors.New("Fake 503(service unavailable) repsonse")
 	}
 
 	resp, err := makeRequest()
+	defer resp.Body.Close()
 
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return treeData, http.StatusInternalServerError, err
 	}
 
 	if resp.StatusCode != 200 {
-		return resp.StatusCode, nil
+		return treeData, resp.StatusCode, nil
 	}
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return treeData, http.StatusInternalServerError, err
 	}
 
-	err = json.Unmarshal(respBytes, &TreeData)
+	err = json.Unmarshal(respBytes, &treeData)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return treeData, http.StatusInternalServerError, err
 	}
-	return resp.StatusCode, err
+	return treeData, resp.StatusCode, err
 }
