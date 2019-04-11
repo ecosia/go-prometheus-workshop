@@ -10,16 +10,16 @@ We will use the [Prometheus Go client library](https://godoc.org/github.com/prom
 
 ## Content
 
-### Section 1: Exporting metrics
+### Section 1: Exporting default metrics
 
 For this section, you can `cd` into `app/` and use `go run main.go` to run the dev server. (Docker will be used later)
 
 Exporting basics:
 
-Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example]() which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
+Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example](https://github.com/prometheus/client_golang/blob/master/examples/simple/main.go) which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
 
 
-Custom metrics:
+### Section 2: Exporting custom metrics
 
 Then, you'll want to track and export custom metrics. This is a three-step process: creating a metric (of a given data type); registering the metric; tracking the metric.
 
@@ -36,24 +36,7 @@ To use our metric in practice, we want to increment the counter when tracking ev
 You should add these `.Inc()` calls in the place in your code where the event you want to track is occuring.
 
 
-Labels:
-
-Labels are a way of adding contextual information to your metrics (increasing their "cardinality"). For example, when tracking the count of requests received, it might be useful to also track the status code of the request. To do this, you can use `prometheus.NewCounterVec()` instead of `prometheus.NewCounter()`, and provide a list of label keys as the second argument - for example:
-
-    requestCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: "requests_total"}, []string{"status_code"})
-
-Then, when tracking it, you'll need to provide the label values, which can be done like so:
-
-    var status int
-    if something.wasSuccessful:
-        status = http.StatusOK
-    else:
-        status = http.StatusInternalServerError
-
-	requestCounter.WithLabelValues(status).Inc()
-
-
-### Scraping Metrics with Prometheus
+### Section 3: Scraping Metrics with Prometheus
 
 So far, we've been able to instrument our application, such that it is now exporting metrics about its runtime behaviour. However, we still need to collect those metrics and store the data in a way that we can query it back out, in order to graph it over time and make dashboards.
 
@@ -65,9 +48,50 @@ To build the application Docker image, and start the application container and P
 
 You should then be able to access the Prometheus dashboard on:
 
-    http://localhost:9090/graph
+    http://localhost:9090
 
 Prometheus should find and immediately start scraping metrics from the application container. You can check that it's found the application container by looking at the list of "targets" that Prometheus is scraping:
 
     http://localhost:9090/targets
+
+### Section 4: Prometheus Queries
+
+Prometheus using it's own query language called [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/). You can enter PromQL queries in the `/graph` page of the Prometheus UI.
+
+To see the counter exported previously, we can use the PromQL query:
+
+    requests_total
+
+If we want to see this graphed as a rate per-second over time, we use the query:
+
+    rate(requests_total[1m])
+
+### Section 5: Making Dashboards with Grafana
+
+[Grafana](http://grafana.com) is an open-source metric visualisation tool, which can be used to create dashboards containing many graphs. Grafana can visualise data from multiple sources, including Prometheus. The `docker-compose` command used in the previous section will also start a Grafana container, which uses the Grafana configuration file in this repo to connect to Prometheus. After running the startup command (same as above, `docker-compose up --build`), you'll be able to find Grafana on:
+
+    http://localhost:3000
+
+Grafana uses authentication, which, for this workshop, is configured in the `docker-compose.yaml` file. The credentials configured for this workshop are:
+
+    username: ecosia
+    password: workshop
+
+#### Section 6: Metrics with Labels
+
+Labels are a way of adding contextual information to your metrics (increasing their ["cardinality"](https://en.wikipedia.org/wiki/Cardinality)). For example, when tracking the count of requests received, it might be useful to also track the status code of the request. To do this, you can use `prometheus.NewCounterVec(opts)` instead of `prometheus.NewCounter(opts)`, and provide a list of label keys as the second argument - for example:
+
+    requestCounter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "requests_total"}, []string{"status_code"})
+
+Then, when tracking it, you'll need to provide the label values, which can be done like so:
+
+    var status int
+    if something.wasSuccessful:
+        status = http.StatusOK
+    else:
+        status = http.StatusInternalServerError
+
+    statusLabel := strconv.Itoa(status) // Label values must be strings
+
+	requestCounter.WithLabelValues(statusLabel).Inc()
 
