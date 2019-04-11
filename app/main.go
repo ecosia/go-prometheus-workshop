@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ecosia/go-prometheus-workshop/app/fetch"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -37,6 +38,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
+
+	mux.Handle("/metrics", promhttp.Handler())
+
 	fmt.Printf("Service started at %v", port)
 	http.ListenAndServe("0.0.0.0:"+port, mux)
 }
