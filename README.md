@@ -16,7 +16,7 @@ For this section, you can `cd` into `app/` and use `go run main.go` to run the d
 
 Exporting basics:
 
-Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example]() which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
+Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example](https://github.com/prometheus/client_golang/blob/master/examples/simple/main.go) which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
 
 
 ### Section 2: Exporting custom metrics
