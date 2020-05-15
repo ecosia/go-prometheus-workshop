@@ -1,4 +1,4 @@
-FROM golang
+FROM golang:alpine
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
