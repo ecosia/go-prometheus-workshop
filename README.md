@@ -16,16 +16,16 @@ For this section, you can `cd` into `app/` and use `go run main.go` to run the d
 
 Exporting basics:
 
-Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example](https://github.com/prometheus/client_golang/blob/master/examples/simple/main.go) which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, if you have a muxer in a variable called `mux`, you can call `mux.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
+Read the documentation or examples about the Prometheus Go client. In particular, you can check the [simple example](https://github.com/prometheus/client_golang/blob/master/examples/simple/main.go) which demonstrates usage of the `promhttp` - this includes a `.Handler()` function which returns an `http.Handler`. The Prometheus Go client exports many metrics by default (about the Go runtime, eg. garbage collection), so you can export just these default metrics by simply attaching the `promhttp` handler to an `http.Server`. For example, you can call `http.Handle("/metrics", promhttp.Handler())`. You should then be able to start the server, and see some default metrics being exported on `/metrics`.
 
 
 ### Section 2: Exporting custom metrics
 
 Then, you'll want to track and export custom metrics. This is a three-step process: creating a metric (of a given data type); registering the metric; tracking the metric.
 
-Prometheus has a few different data types, but the simplest is a `Counter` - this is a counter which always goes up, and can be used to track, for example, the number of requests received (you can then divide this unit over time to calculate requests per second). To create a `Counter`, you can use the `prometheus` Go client, with `prometheus.NewCounter(opts)`, where `opts` is a `prometheus.CounterOpts` (a struct containing metadata - at minimum, a `Name`). You can store this in a variable, like:
+Prometheus has a few different data types, but the simplest is a `Counter` - this is a counter which always goes up, and can be used to track, for example, the number of requests received (you can then divide this unit over time to calculate requests per second). To create a `Counter`, you can use the `prometheus` Go client, with `prometheus.NewCounter(opts)`, where `opts` is a `prometheus.CounterOpts` (a struct containing metadata - at minimum, a `Name`). You can store this in a global variable, like:
 
-    requestCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: "requests_total"})
+    var requestCounter = prometheus.NewCounter(prometheus.CounterOpts{Name: "requests_total"})
 
 After creating a metric, you still won't see it appear in `/metrics` until it's been "registered". You can do this with `prometheus.MustRegister(metric)`, which will attempt to register the metric and panic if it fails (the non-panicing version also exists, as `prometheus.Register()`, but for this workshop, we recommend using `MustRegister()`). Then, you should be able to see your metric exposed on `/metrics` - success! (Except, it will still always report 0 - not quite useful, yet)
 

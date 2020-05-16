@@ -33,8 +33,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handler)
+	http.HandleFunc("/", handler)
+
 	fmt.Printf("Service started at %v", port)
-	http.ListenAndServe("0.0.0.0:"+port, mux)
+	http.ListenAndServe("0.0.0.0:"+port, http.DefaultServeMux)
 }
